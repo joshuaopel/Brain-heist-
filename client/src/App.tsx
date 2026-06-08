@@ -5,7 +5,7 @@ import LobbyUI from "./components/LobbyUI";
 import HUD from "./components/HUD";
 import VictoryScreen from "./components/VictoryScreen";
 import TouchControls from "./components/TouchControls";
-import type { TeamId, GamePhase } from "@brain-heist/shared";
+import type { TeamId, GamePhase, PlayerClass } from "@brain-heist/shared";
 
 export interface UserInfo {
   userId: string;
@@ -68,9 +68,9 @@ export default function App() {
 
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-  const handleJoinTeam = (t: TeamId) => {
+  const handleJoinTeam = (t: TeamId, cls: PlayerClass) => {
     setHasJoined(true);
-    managerRef.current?.joinTeam(t);
+    managerRef.current?.joinTeam(t, cls);
   };
 
   const handleStartGame = () => managerRef.current?.requestRestart();
@@ -108,7 +108,7 @@ export default function App() {
 
       {/* Full lobby overlay — only before joining a team */}
       {connectState === "ready" && phase === "lobby" && !hasJoined && (
-        <LobbyUI user={user} onJoinTeam={handleJoinTeam} />
+        <LobbyUI user={user} onJoinTeam={(t, cls) => handleJoinTeam(t, cls)} />
       )}
 
       {/* Floating banner — after joining, arena is visible and you can move */}
@@ -148,7 +148,7 @@ export default function App() {
             redLevel={redLevel} blueLevel={blueLevel}
             matchTimer={matchTimer} brainQuote={brainQuote} />
           {isMobile && (
-            <TouchControls onInput={(input) => managerRef.current?.sendTouchInput(input)} />
+            <TouchControls onInput={(i) => managerRef.current?.sendTouchInput(i)} />
           )}
         </>
       )}

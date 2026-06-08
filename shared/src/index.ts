@@ -2,81 +2,111 @@ export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
 
 export const BRAIN_LEVELS = [
-  { level: 1, ideasRequired: 0,  name: "Newborn",     quote: "Hello." },
-  { level: 2, ideasRequired: 10, name: "Awakening",   quote: "I have discovered cheese." },
-  { level: 3, ideasRequired: 25, name: "Enlightened", quote: "I require additional memes." },
-  { level: 4, ideasRequired: 50, name: "Ascendant",   quote: "The pigeons are watching." },
-  { level: 5, ideasRequired: 100,name: "Singularity", quote: "Ascension complete." },
+  { level: 1, ideasRequired: 0,   name: "Newborn",     quote: "Hello." },
+  { level: 2, ideasRequired: 10,  name: "Awakening",   quote: "I have discovered cheese." },
+  { level: 3, ideasRequired: 25,  name: "Enlightened", quote: "I require additional memes." },
+  { level: 4, ideasRequired: 50,  name: "Ascendant",   quote: "The pigeons are watching." },
+  { level: 5, ideasRequired: 100, name: "Singularity", quote: "Ascension complete." },
 ] as const;
 
 export const ARTIFACT_TYPES = [
-  "sketch",
-  "code_snippet",
-  "coffee",
-  "sticky_note",
-  "render_file",
-  "meme",
-  "bug_report",
+  "sketch", "code_snippet", "coffee", "sticky_note",
+  "render_file", "meme", "bug_report",
 ] as const;
-
 export type ArtifactType = typeof ARTIFACT_TYPES[number];
 
 export const ARTIFACT_VALUES: Record<ArtifactType, number> = {
-  sketch: 1,
-  code_snippet: 2,
-  coffee: 1,
-  sticky_note: 1,
-  render_file: 3,
-  meme: 2,
-  bug_report: 1,
+  sketch: 1, code_snippet: 2, coffee: 1, sticky_note: 1,
+  render_file: 3, meme: 2, bug_report: 1,
 };
 
 export const ARTIFACT_EMOJIS: Record<ArtifactType, string> = {
-  sketch: "✏️",
-  code_snippet: "💻",
-  coffee: "☕",
-  sticky_note: "📝",
-  render_file: "🎨",
-  meme: "😂",
-  bug_report: "🐛",
+  sketch: "✏️", code_snippet: "💻", coffee: "☕", sticky_note: "📝",
+  render_file: "🎨", meme: "😂", bug_report: "🐛",
 };
 
-export type TeamId = "red" | "blue";
+// ----- Classes -----
+export const CLASSES = {
+  coder: {
+    name: "Coder", emoji: "🟢",
+    speed: 1.0, carry: 5,
+    attackRange: 55, attackKnockback: 1.0, attackStun: 0,
+    attackCooldown: 1200,
+    desc: "Balanced runner. Mugs artifacts on hit.",
+  },
+  designer: {
+    name: "Designer", emoji: "🟣",
+    speed: 1.45, carry: 3,
+    attackRange: 45, attackKnockback: 0.6, attackStun: 0,
+    attackCooldown: 1800,
+    desc: "Fastest class. Hard to catch.",
+  },
+  brawler: {
+    name: "Brawler", emoji: "🟠",
+    speed: 0.82, carry: 2,
+    attackRange: 65, attackKnockback: 2.2, attackStun: 600,
+    attackCooldown: 1600,
+    desc: "Slow but hits hard. Stuns enemies.",
+  },
+} as const;
+export type PlayerClass = keyof typeof CLASSES;
 
-export type GamePhase = "lobby" | "playing" | "victory";
-
+// ----- Shared input -----
 export interface InputPayload {
-  left: boolean;
-  right: boolean;
-  up: boolean;
-  down: boolean;
-  interact: boolean;
-  drop: boolean;
+  left: boolean; right: boolean; up: boolean; down: boolean;
+  interact: boolean; drop: boolean; attack: boolean;
   tick: number;
 }
 
-export const PLAYER_SPEED = 200;
-export const PLAYER_RADIUS = 20;
+// ----- Physics constants -----
+export const PLAYER_SPEED     = 200;
+export const PLAYER_RADIUS    = 20;
 export const BRAIN_CAPTURE_TIME = 30000;
 export const ORB_SPAWN_INTERVAL = 3000;
-export const MAX_CARRY = 5;
-export const PUSH_FORCE = 300;
-export const INTERACT_RANGE = 60;
+export const INTERACT_RANGE   = 65;
+export const ATTACK_KNOCKBACK_BASE = 280;
+export const CARRY_SLOW_PER_ITEM   = 0.05; // -5% speed per artifact carried
+
+// ----- Map layout -----
+const CX = GAME_WIDTH / 2;
+const CY = GAME_HEIGHT / 2;
 
 export const MAP = {
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
-  redBase: { x: 120, y: GAME_HEIGHT / 2 },
-  blueBase: { x: GAME_WIDTH - 120, y: GAME_HEIGHT / 2 },
-  redBrainStart: { x: 160, y: GAME_HEIGHT / 2 },
-  blueBrainStart: { x: GAME_WIDTH - 160, y: GAME_HEIGHT / 2 },
+
+  // Spawns
+  redSpawn:  { x: 140,              y: CY },
+  blueSpawn: { x: GAME_WIDTH - 140, y: CY },
+
+  // Brain home (Nest) — upper pocket of each base
+  redNest:   { x: 100, y: CY - 100 },
+  blueNest:  { x: GAME_WIDTH - 100, y: CY - 100 },
+
+  // Captured enemy brain goes here (Prison) — lower pocket
+  redPrison:   { x: 100, y: CY + 100 },
+  bluePrison:  { x: GAME_WIDTH - 100, y: CY + 100 },
+
+  // Brain starting positions = their Nest
+  redBrainStart:  { x: 100, y: CY - 100 },
+  blueBrainStart: { x: GAME_WIDTH - 100, y: CY - 100 },
+
+  // Orb spawn zones — typed by zone index
   orbZones: [
-    { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 },
-    { x: GAME_WIDTH / 2 - 200, y: 180 },
-    { x: GAME_WIDTH / 2 + 200, y: 180 },
-    { x: GAME_WIDTH / 2 - 200, y: GAME_HEIGHT - 180 },
-    { x: GAME_WIDTH / 2 + 200, y: GAME_HEIGHT - 180 },
-    { x: GAME_WIDTH / 2, y: 140 },
-    { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 140 },
+    { x: CX,       y: CY,           type: "code_snippet" as ArtifactType },
+    { x: CX - 220, y: 170,          type: "sketch"       as ArtifactType },
+    { x: CX + 220, y: 170,          type: "render_file"  as ArtifactType },
+    { x: CX - 220, y: GAME_HEIGHT - 170, type: "meme"    as ArtifactType },
+    { x: CX + 220, y: GAME_HEIGHT - 170, type: "sticky_note" as ArtifactType },
+    { x: CX,       y: 130,          type: "coffee"       as ArtifactType },
+    { x: CX,       y: GAME_HEIGHT - 130, type: "bug_report" as ArtifactType },
   ],
-};
+
+  // Bounding radii used by server
+  nestRadius:   55,
+  prisonRadius: 55,
+  baseRadius:   110, // full base area (both pockets)
+} as const;
+
+export type TeamId = "red" | "blue";
+export type GamePhase = "lobby" | "playing" | "victory";

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useCallback } from "react";
 
 interface Props {
-  onInput: (input: { left: boolean; right: boolean; up: boolean; down: boolean; interact: boolean; drop: boolean }) => void;
+  onInput: (input: { left: boolean; right: boolean; up: boolean; down: boolean; interact: boolean; drop: boolean; attack: boolean }) => void;
 }
 
 export default function TouchControls({ onInput }: Props) {
@@ -14,8 +14,8 @@ export default function TouchControls({ onInput }: Props) {
   const DEAD = 15;
   const MAX_R = 44;
 
-  const emit = useCallback((interact = false, drop = false) => {
-    onInput({ ...dirRef.current, interact, drop });
+  const emit = useCallback((interact = false, drop = false, attack = false) => {
+    onInput({ ...dirRef.current, interact, drop, attack });
   }, [onInput]);
 
   useEffect(() => {
@@ -120,18 +120,25 @@ export default function TouchControls({ onInput }: Props) {
       </div>
 
       {/* Right: action buttons */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, pointerEvents: "all" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, pointerEvents: "all" }}>
+        <div
+          style={btnStyle("rgba(239,68,68,0.85)")}
+          onTouchStart={(e) => { e.preventDefault(); emit(false, false, true); }}
+          onTouchEnd={(e) => { e.preventDefault(); emit(false, false, false); }}
+        >
+          🥊
+        </div>
         <div
           style={btnStyle("rgba(168,85,247,0.8)")}
-          onTouchStart={(e) => { e.preventDefault(); emit(true, false); }}
-          onTouchEnd={(e) => { e.preventDefault(); emit(false, false); }}
+          onTouchStart={(e) => { e.preventDefault(); emit(true, false, false); }}
+          onTouchEnd={(e) => { e.preventDefault(); emit(false, false, false); }}
         >
           ⚡
         </div>
         <div
           style={btnStyle("rgba(100,100,100,0.7)")}
-          onTouchStart={(e) => { e.preventDefault(); emit(false, true); }}
-          onTouchEnd={(e) => { e.preventDefault(); emit(false, false); }}
+          onTouchStart={(e) => { e.preventDefault(); emit(false, true, false); }}
+          onTouchEnd={(e) => { e.preventDefault(); emit(false, false, false); }}
         >
           ↓
         </div>

@@ -1,14 +1,18 @@
-import type { TeamId, ArtifactType } from "@brain-heist/shared";
+import type { TeamId, ArtifactType, PlayerClass } from "@brain-heist/shared";
 
 export interface PlayerState {
   id: string;
   name: string;
   avatarUrl: string;
   team: TeamId;
+  playerClass: PlayerClass;
   x: number;
   y: number;
   carrying: number;
   connected: boolean;
+  stunned: boolean;
+  stunTimer: number;
+  attackCooldown: number;
   onChange: (cb: () => void) => void;
 }
 

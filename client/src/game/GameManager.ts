@@ -3,7 +3,7 @@ import { Client, Room } from "colyseus.js";
 import type { GameState } from "./scenes/types";
 import { ArenaScene } from "./scenes/ArenaScene";
 import type { UserInfo } from "../App";
-import type { TeamId, GamePhase } from "@brain-heist/shared";
+import type { TeamId, GamePhase, PlayerClass } from "@brain-heist/shared";
 
 interface Callbacks {
   onPhaseChange: (phase: GamePhase) => void;
@@ -80,16 +80,16 @@ export class GameManager {
     });
   }
 
-  sendTouchInput(input: { left: boolean; right: boolean; up: boolean; down: boolean; interact: boolean; drop: boolean }) {
+  sendTouchInput(input: { left: boolean; right: boolean; up: boolean; down: boolean; interact: boolean; drop: boolean; attack: boolean }) {
     const scene = this.game?.scene.getScene("ArenaScene") as import("./scenes/ArenaScene").ArenaScene | null;
     scene?.setTouchInput(input);
   }
 
-  joinTeam(team: TeamId) {
+  joinTeam(team: TeamId, playerClass: PlayerClass = "coder") {
     this.currentTeam = team;
     this.callbacks.onTeamChange(team);
     this.room.send("join_team", {
-      team,
+      team, playerClass,
       name: this.user.username,
       avatarUrl: this.user.avatarUrl,
     });
