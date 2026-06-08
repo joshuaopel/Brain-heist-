@@ -1,0 +1,53 @@
+name: Deploy Client → GitHub Pages
+
+on:
+  push:
+    branches: [main, master, claude/brain-heist-discord-game-jkSt0]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build shared
+        run: npm run build --workspace=shared
+
+      - name: Build client
+        run: npm run build --workspace=client
+        env:
+          VITE_DISCORD_CLIENT_ID: ${{ vars.VITE_DISCORD_CLIENT_ID }}
+          VITE_SERVER_URL: ${{ vars.VITE_SERVER_URL }}
+          # Base path = /Brain-heist-/ for GitHub Pages project site
+          VITE_BASE_PATH: /Brain-heist-/
+
+      - uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: client/dist
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

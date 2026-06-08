@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    // Redirect 404s back to index.html for SPA routing
+    const path = window.location.pathname;
+    const base = '/Brain-heist-';
+    sessionStorage.setItem('redirect', path);
+    window.location.replace(base + '/');
+  </script>
+</head>
+</html>
