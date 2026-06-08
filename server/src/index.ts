@@ -4,6 +4,7 @@ import { createServer } from "http";
 import { Server } from "colyseus";
 import { monitor } from "@colyseus/monitor";
 import { BrainHeistRoom } from "./rooms/BrainHeistRoom";
+import path from "path";
 
 const port = Number(process.env.PORT || 2567);
 const app = express();
@@ -54,6 +55,11 @@ app.post("/api/token", async (req, res) => {
 
   res.json({ access_token: data.access_token });
 });
+
+// Serve the built client (Discord Activity loads from here at root /)
+const clientDist = path.join(__dirname, "..", "..", "client", "dist");
+app.use(express.static(clientDist));
+app.get("*", (_req, res) => res.sendFile(path.join(clientDist, "index.html")));
 
 httpServer.listen(port, () => {
   console.log(`Brain Heist server running on http://localhost:${port}`);

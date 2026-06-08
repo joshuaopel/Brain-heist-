@@ -28,7 +28,10 @@ export class GameManager {
   }
 
   async init() {
-    const serverUrl = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
+    // When served from Render or Discord proxy, connect back to same host.
+    // When served from GitHub Pages, use the explicit env var.
+    const serverUrl = import.meta.env.VITE_SERVER_URL ||
+      `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
     const client = new Client(serverUrl);
 
     try {
