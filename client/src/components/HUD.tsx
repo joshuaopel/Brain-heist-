@@ -1,6 +1,6 @@
 import React from "react";
 import type { TeamId } from "@brain-heist/shared";
-import { BRAIN_LEVELS } from "@brain-heist/shared";
+import { BRAIN_LEVELS, BRAIN_CAPTURE_TIME } from "@brain-heist/shared";
 
 interface Props {
   team: TeamId;
@@ -10,6 +10,10 @@ interface Props {
   blueLevel: number;
   matchTimer: number;
   brainQuote: { team: TeamId; text: string } | null;
+  redCaptureProgress: number;
+  blueCaptureProgress: number;
+  redBrainCarried: boolean;
+  blueBrainCarried: boolean;
 }
 
 function formatTime(ms: number) {
@@ -42,7 +46,7 @@ function BrainBar({ ideas, level, color, label }: { ideas: number; level: number
   );
 }
 
-export default function HUD({ team, redIdeas, blueIdeas, redLevel, blueLevel, matchTimer, brainQuote }: Props) {
+export default function HUD({ team, redIdeas, blueIdeas, redLevel, blueLevel, matchTimer, brainQuote, redCaptureProgress, blueCaptureProgress, redBrainCarried, blueBrainCarried }: Props) {
   return (
     <>
       {/* Top bar */}
@@ -64,6 +68,52 @@ export default function HUD({ team, redIdeas, blueIdeas, redLevel, blueLevel, ma
 
         <BrainBar ideas={blueIdeas} level={blueLevel} color="#3b82f6" label="🔵 Blue AI" />
       </div>
+
+      {/* Brain alert */}
+      {(() => {
+        const myCapture = team === "red" ? redCaptureProgress : blueCaptureProgress;
+        const myCarried = team === "red" ? redBrainCarried : blueBrainCarried;
+        const enemyCapture = team === "red" ? blueCaptureProgress : redCaptureProgress;
+        const enemyCarried = team === "red" ? blueBrainCarried : redBrainCarried;
+        const myColor = team === "red" ? "#ef4444" : "#3b82f6";
+        const enemyColor = team === "red" ? "#3b82f6" : "#ef4444";
+        const secLeft = Math.ceil((1 - myCapture) * BRAIN_CAPTURE_TIME / 1000);
+        return (
+          <>
+            {(myCarried || myCapture > 0) && (
+              <div style={{
+                position: "absolute", top: 72, left: "50%", transform: "translateX(-50%)",
+                background: "rgba(0,0,0,0.9)", border: `2px solid ${myCapture > 0 ? "#ef4444" : "#facc15"}`,
+                borderRadius: 12, padding: "10px 28px", textAlign: "center",
+                pointerEvents: "none", minWidth: 300,
+                animation: "alertPulse 0.5s infinite",
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 900, color: myCapture > 0 ? "#ef4444" : "#facc15", marginBottom: myCapture > 0 ? 8 : 0 }}>
+                  {myCapture > 0 ? "🔒 YOUR AI IS BEING LOCKED DOWN!" : "⚠️ YOUR AI HAS BEEN STOLEN!"}
+                </div>
+                {myCapture > 0 && (
+                  <>
+                    <div style={{ height: 8, background: "rgba(255,255,255,0.15)", borderRadius: 4, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${myCapture * 100}%`, background: "#ef4444", borderRadius: 4, transition: "width 0.2s" }} />
+                    </div>
+                    <div style={{ fontSize: 11, opacity: 0.8, marginTop: 4, color: "#fff" }}>{secLeft}s until captured</div>
+                  </>
+                )}
+              </div>
+            )}
+            {(enemyCarried || enemyCapture > 0) && !(myCarried || myCapture > 0) && (
+              <div style={{
+                position: "absolute", top: 72, left: "50%", transform: "translateX(-50%)",
+                background: "rgba(0,0,0,0.85)", border: `2px solid ${enemyColor}`,
+                borderRadius: 12, padding: "8px 24px", textAlign: "center",
+                pointerEvents: "none", fontSize: 12, color: "#4ade80", fontWeight: 700,
+              }}>
+                {enemyCapture > 0 ? "✅ LOCKING DOWN ENEMY AI!" : "⚡ ENEMY AI CAPTURED — GET IT TO YOUR SANDBOX!"}
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* Team indicator */}
       <div style={{
@@ -94,6 +144,7 @@ export default function HUD({ team, redIdeas, blueIdeas, redLevel, blueLevel, ma
       <style>{`
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
         @keyframes fadeInOut { 0%,100% { opacity:0; } 10%,80% { opacity:1; } }
+        @keyframes alertPulse { 0%,100% { opacity:1; box-shadow:none; } 50% { opacity:0.85; box-shadow: 0 0 12px rgba(239,68,68,0.5); } }
       `}</style>
     </>
   );

@@ -1,6 +1,9 @@
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
 
+export const WORLD_WIDTH  = 3200;
+export const WORLD_HEIGHT = 1800;
+
 export const BRAIN_LEVELS = [
   { level: 1, ideasRequired: 0,   name: "Booting",      quote: "Loading... please wait." },
   { level: 2, ideasRequired: 10,  name: "Learning",     quote: "I have discovered cats. Fascinating." },
@@ -78,38 +81,38 @@ export const ATTACK_KNOCKBACK_BASE = 280;
 export const CARRY_SLOW_PER_ITEM   = 0.05;
 
 // ----- Map layout -----
-const CX = GAME_WIDTH / 2;
-const CY = GAME_HEIGHT / 2;
+const CX = WORLD_WIDTH / 2;
+const CY = WORLD_HEIGHT / 2;
 
 export const MAP = {
-  width: GAME_WIDTH,
-  height: GAME_HEIGHT,
+  width:  WORLD_WIDTH,
+  height: WORLD_HEIGHT,
 
-  redSpawn:  { x: 140,              y: CY },
-  blueSpawn: { x: GAME_WIDTH - 140, y: CY },
+  redSpawn:  { x: 350,               y: CY },
+  blueSpawn: { x: WORLD_WIDTH - 350,  y: CY },
 
-  redNest:   { x: 100, y: CY - 100 },
-  blueNest:  { x: GAME_WIDTH - 100, y: CY - 100 },
+  redNest:  { x: 250,               y: CY - 250 },
+  blueNest: { x: WORLD_WIDTH - 250,  y: CY - 250 },
 
-  redPrison:   { x: 100, y: CY + 100 },
-  bluePrison:  { x: GAME_WIDTH - 100, y: CY + 100 },
+  redPrison:  { x: 250,               y: CY + 250 },
+  bluePrison: { x: WORLD_WIDTH - 250,  y: CY + 250 },
 
-  redBrainStart:  { x: 100, y: CY - 100 },
-  blueBrainStart: { x: GAME_WIDTH - 100, y: CY - 100 },
+  redBrainStart:  { x: 250,               y: CY - 250 },
+  blueBrainStart: { x: WORLD_WIDTH - 250,  y: CY - 250 },
 
   orbZones: [
-    { x: CX,       y: CY,                type: "code_snippet" as ArtifactType },
-    { x: CX - 220, y: 170,               type: "sketch"       as ArtifactType },
-    { x: CX + 220, y: 170,               type: "render_file"  as ArtifactType },
-    { x: CX - 220, y: GAME_HEIGHT - 170, type: "meme"         as ArtifactType },
-    { x: CX + 220, y: GAME_HEIGHT - 170, type: "sticky_note"  as ArtifactType },
-    { x: CX,       y: 130,               type: "coffee"       as ArtifactType },
-    { x: CX,       y: GAME_HEIGHT - 130, type: "bug_report"   as ArtifactType },
+    { x: CX,        y: CY,                  type: "code_snippet" as ArtifactType },
+    { x: CX - 550,  y: 425,                 type: "sketch"       as ArtifactType },
+    { x: CX + 550,  y: 425,                 type: "render_file"  as ArtifactType },
+    { x: CX - 550,  y: WORLD_HEIGHT - 425,  type: "meme"         as ArtifactType },
+    { x: CX + 550,  y: WORLD_HEIGHT - 425,  type: "sticky_note"  as ArtifactType },
+    { x: CX,        y: 325,                 type: "coffee"       as ArtifactType },
+    { x: CX,        y: WORLD_HEIGHT - 325,  type: "bug_report"   as ArtifactType },
   ],
 
-  nestRadius:   55,
-  prisonRadius: 55,
-  baseRadius:   110,
+  nestRadius:   140,
+  prisonRadius: 140,
+  baseRadius:   275,
 } as const;
 
 export type TeamId = "red" | "blue";

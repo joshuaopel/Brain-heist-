@@ -2,7 +2,7 @@ import { Room, Client } from "colyseus";
 import { GameState, PlayerState, ArtifactState, BrainState } from "../schema/GameState";
 import {
   InputPayload, TeamId, ArtifactType, ARTIFACT_TYPES, ARTIFACT_VALUES,
-  MAP, GAME_WIDTH, GAME_HEIGHT, PLAYER_SPEED, PLAYER_RADIUS, BRAIN_LEVELS,
+  MAP, GAME_WIDTH, GAME_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT, PLAYER_SPEED, PLAYER_RADIUS, BRAIN_LEVELS,
   BRAIN_CAPTURE_TIME, ORB_SPAWN_INTERVAL, INTERACT_RANGE,
   CLASSES, PlayerClass, ATTACK_KNOCKBACK_BASE, CARRY_SLOW_PER_ITEM,
 } from "@brain-heist/shared";
@@ -54,8 +54,8 @@ export class BrainHeistRoom extends Room<GameState> {
   onJoin(client: Client) {
     const p = new PlayerState();
     p.id = client.sessionId;
-    p.x = GAME_WIDTH / 2;
-    p.y = GAME_HEIGHT / 2;
+    p.x = WORLD_WIDTH / 2;
+    p.y = WORLD_HEIGHT / 2;
     this.state.players.set(client.sessionId, p);
   }
 
@@ -106,8 +106,8 @@ export class BrainHeistRoom extends Room<GameState> {
     const a = new ArtifactState();
     a.id = `artifact_${++artifactCounter}`;
     a.type = zone.type as ArtifactType;
-    a.x = clamp(zone.x + (Math.random() - 0.5) * 100, 80, GAME_WIDTH - 80);
-    a.y = clamp(zone.y + (Math.random() - 0.5) * 70, 80, GAME_HEIGHT - 80);
+    a.x = clamp(zone.x + (Math.random() - 0.5) * 100, 80, WORLD_WIDTH - 80);
+    a.y = clamp(zone.y + (Math.random() - 0.5) * 70, 80, WORLD_HEIGHT - 80);
     this.state.artifacts.set(a.id, a);
   }
 
@@ -160,8 +160,8 @@ export class BrainHeistRoom extends Room<GameState> {
         player.x += (dx / len) * PLAYER_SPEED * speedMult * (dt / 1000);
         player.y += (dy / len) * PLAYER_SPEED * speedMult * (dt / 1000);
       }
-      player.x = clamp(player.x, PLAYER_RADIUS, GAME_WIDTH - PLAYER_RADIUS);
-      player.y = clamp(player.y, PLAYER_RADIUS, GAME_HEIGHT - PLAYER_RADIUS);
+      player.x = clamp(player.x, PLAYER_RADIUS, WORLD_WIDTH - PLAYER_RADIUS);
+      player.y = clamp(player.y, PLAYER_RADIUS, WORLD_HEIGHT - PLAYER_RADIUS);
       player.tick = input.tick;
 
       // Move carried brain
@@ -186,10 +186,10 @@ export class BrainHeistRoom extends Room<GameState> {
         if (d < minD && d > 0) {
           const overlap = (minD - d) / 2;
           const nx = (b.x - a.x) / d, ny = (b.y - a.y) / d;
-          a.x = clamp(a.x - nx * overlap, PLAYER_RADIUS, GAME_WIDTH - PLAYER_RADIUS);
-          a.y = clamp(a.y - ny * overlap, PLAYER_RADIUS, GAME_HEIGHT - PLAYER_RADIUS);
-          b.x = clamp(b.x + nx * overlap, PLAYER_RADIUS, GAME_WIDTH - PLAYER_RADIUS);
-          b.y = clamp(b.y + ny * overlap, PLAYER_RADIUS, GAME_HEIGHT - PLAYER_RADIUS);
+          a.x = clamp(a.x - nx * overlap, PLAYER_RADIUS, WORLD_WIDTH - PLAYER_RADIUS);
+          a.y = clamp(a.y - ny * overlap, PLAYER_RADIUS, WORLD_HEIGHT - PLAYER_RADIUS);
+          b.x = clamp(b.x + nx * overlap, PLAYER_RADIUS, WORLD_WIDTH - PLAYER_RADIUS);
+          b.y = clamp(b.y + ny * overlap, PLAYER_RADIUS, WORLD_HEIGHT - PLAYER_RADIUS);
         }
       }
     }
@@ -262,8 +262,8 @@ export class BrainHeistRoom extends Room<GameState> {
       const nx = d > 0 ? (target.x - attacker.x) / d : 1;
       const ny = d > 0 ? (target.y - attacker.y) / d : 0;
       const force = ATTACK_KNOCKBACK_BASE * cls.attackKnockback;
-      target.x = clamp(target.x + nx * force * 0.1, PLAYER_RADIUS, GAME_WIDTH - PLAYER_RADIUS);
-      target.y = clamp(target.y + ny * force * 0.1, PLAYER_RADIUS, GAME_HEIGHT - PLAYER_RADIUS);
+      target.x = clamp(target.x + nx * force * 0.1, PLAYER_RADIUS, WORLD_WIDTH - PLAYER_RADIUS);
+      target.y = clamp(target.y + ny * force * 0.1, PLAYER_RADIUS, WORLD_HEIGHT - PLAYER_RADIUS);
 
       // Stun (brawler)
       if (cls.attackStun > 0) {

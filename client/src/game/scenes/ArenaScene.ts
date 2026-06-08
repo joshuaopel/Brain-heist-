@@ -4,7 +4,7 @@ import type { GameState, BrainState, ArtifactState, PlayerState } from "./types"
 import type { UserInfo } from "../../App";
 import type { TeamId, ArtifactType } from "@brain-heist/shared";
 import {
-  ARTIFACT_EMOJIS, BRAIN_LEVELS, MAP, GAME_WIDTH, GAME_HEIGHT,
+  ARTIFACT_EMOJIS, BRAIN_LEVELS, MAP, WORLD_WIDTH, WORLD_HEIGHT,
   PLAYER_RADIUS, BRAIN_CAPTURE_TIME, CLASSES,
 } from "@brain-heist/shared";
 import type { PlayerClass } from "@brain-heist/shared";
@@ -79,6 +79,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   create() {
+    this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     this.drawMap();
     this.createBrainSprites();
     this.setupInput();
@@ -90,12 +91,12 @@ export class ArenaScene extends Phaser.Scene {
 
     // Background
     g.fillStyle(COLORS.ground);
-    g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    g.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
     // Tile pattern
     g.fillStyle(COLORS.groundLight, 0.4);
-    for (let x = 0; x < GAME_WIDTH; x += 80) {
-      for (let y = 0; y < GAME_HEIGHT; y += 80) {
+    for (let x = 0; x < WORLD_WIDTH; x += 80) {
+      for (let y = 0; y < WORLD_HEIGHT; y += 80) {
         if ((x / 80 + y / 80) % 2 === 0) g.fillRect(x, y, 80, 80);
       }
     }
@@ -160,18 +161,31 @@ export class ArenaScene extends Phaser.Scene {
 
     // Center divider
     g.lineStyle(2, 0xffffff, 0.08);
-    g.lineBetween(GAME_WIDTH / 2, 0, GAME_WIDTH / 2, GAME_HEIGHT);
+    g.lineBetween(WORLD_WIDTH / 2, 0, WORLD_WIDTH / 2, WORLD_HEIGHT);
     g.lineStyle(2, 0xffffff, 0.1);
-    g.strokeCircle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 100);
+    g.strokeCircle(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, 100);
 
     // Obstacles
+    const W = WORLD_WIDTH, H = WORLD_HEIGHT, CX2 = W/2, CY2 = H/2;
     const obstacles = [
-      { x: 360, y: 200, w: 80, h: 40 },
-      { x: 360, y: GAME_HEIGHT - 200, w: 80, h: 40 },
-      { x: GAME_WIDTH - 360, y: 200, w: 80, h: 40 },
-      { x: GAME_WIDTH - 360, y: GAME_HEIGHT - 200, w: 80, h: 40 },
-      { x: GAME_WIDTH / 2 - 40, y: 120, w: 80, h: 40 },
-      { x: GAME_WIDTH / 2 - 40, y: GAME_HEIGHT - 140, w: 80, h: 40 },
+      // Near bases
+      { x: 600,     y: 450,      w: 200, h: 100 },
+      { x: 600,     y: H - 550,  w: 200, h: 100 },
+      { x: W - 800, y: 450,      w: 200, h: 100 },
+      { x: W - 800, y: H - 550,  w: 200, h: 100 },
+      // Top / bottom center
+      { x: CX2 - 100, y: 300,      w: 200, h: 100 },
+      { x: CX2 - 100, y: H - 400,  w: 200, h: 100 },
+      // Center cluster
+      { x: CX2 - 320, y: CY2 - 130, w: 160, h: 80 },
+      { x: CX2 + 160, y: CY2 - 130, w: 160, h: 80 },
+      { x: CX2 - 320, y: CY2 + 50,  w: 160, h: 80 },
+      { x: CX2 + 160, y: CY2 + 50,  w: 160, h: 80 },
+      // Mid-field cover
+      { x: CX2 - 650, y: CY2 - 260, w: 140, h: 70 },
+      { x: CX2 + 510, y: CY2 - 260, w: 140, h: 70 },
+      { x: CX2 - 650, y: CY2 + 190, w: 140, h: 70 },
+      { x: CX2 + 510, y: CY2 + 190, w: 140, h: 70 },
     ];
     for (const o of obstacles) {
       g.fillStyle(COLORS.obstacle);
@@ -194,7 +208,7 @@ export class ArenaScene extends Phaser.Scene {
     }
 
     g.lineStyle(4, 0x7c3aed, 0.5);
-    g.strokeRect(2, 2, GAME_WIDTH - 4, GAME_HEIGHT - 4);
+    g.strokeRect(2, 2, WORLD_WIDTH - 4, WORLD_HEIGHT - 4);
   }
 
   private createBrainSprites() {
@@ -283,6 +297,10 @@ export class ArenaScene extends Phaser.Scene {
     state.players.onAdd((player: PlayerState, sessionId: string) => {
       const sprite = this.createPlayerSprite(player.x, player.y, player.team, player.name);
       this.playerSprites.set(sessionId, sprite);
+
+      if (sessionId === this.room.sessionId) {
+        this.cameras.main.startFollow(sprite, true, 0.1, 0.1);
+      }
 
       player.onChange(() => {
         const s = this.playerSprites.get(sessionId);

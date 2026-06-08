@@ -4,12 +4,13 @@ import type { GameState } from "./scenes/types";
 import { ArenaScene } from "./scenes/ArenaScene";
 import type { UserInfo } from "../App";
 import type { TeamId, GamePhase, PlayerClass } from "@brain-heist/shared";
+import { BRAIN_CAPTURE_TIME } from "@brain-heist/shared";
 
 interface Callbacks {
   onPhaseChange: (phase: GamePhase) => void;
   onTeamChange: (team: TeamId) => void;
   onWinner: (team: TeamId, reason: string) => void;
-  onStatsUpdate: (ri: number, bi: number, rl: number, bl: number, mt: number) => void;
+  onStatsUpdate: (ri: number, bi: number, rl: number, bl: number, mt: number, rcp: number, bcp: number, rc: boolean, bc: boolean) => void;
   onBrainQuote: (team: TeamId, text: string) => void;
 }
 
@@ -55,6 +56,10 @@ export class GameManager {
         state.redBrain.level,
         state.blueBrain.level,
         state.matchTimer,
+        state.redBrain.captureTimer / BRAIN_CAPTURE_TIME,
+        state.blueBrain.captureTimer / BRAIN_CAPTURE_TIME,
+        state.redBrain.beingCarried,
+        state.blueBrain.beingCarried,
       );
     });
 

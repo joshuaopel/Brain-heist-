@@ -29,6 +29,10 @@ export default function App() {
   const [blueLevel, setBlueLevel] = useState(1);
   const [matchTimer, setMatchTimer] = useState(300000);
   const [brainQuote, setBrainQuote] = useState<{ team: TeamId; text: string } | null>(null);
+  const [redCapture, setRedCapture] = useState(0);
+  const [blueCapture, setBlueCapture] = useState(0);
+  const [redCarried, setRedCarried] = useState(false);
+  const [blueCarried, setBlueCarried] = useState(false);
   const gameContainerRef = useRef<HTMLDivElement>(null);
   const managerRef = useRef<GameManager | null>(null);
 
@@ -43,10 +47,12 @@ export default function App() {
       onPhaseChange: (p) => { setPhase(p); if (p !== "lobby") setHasJoined(false); },
       onTeamChange: setTeam,
       onWinner: (t, r) => setWinner({ team: t, reason: r }),
-      onStatsUpdate: (ri, bi, rl, bl, mt) => {
+      onStatsUpdate: (ri, bi, rl, bl, mt, rcp, bcp, rc, bc) => {
         setRedIdeas(ri); setBlueIdeas(bi);
         setRedLevel(rl); setBlueLevel(bl);
         setMatchTimer(mt);
+        setRedCapture(rcp); setBlueCapture(bcp);
+        setRedCarried(rc); setBlueCarried(bc);
       },
       onBrainQuote: (t, text) => {
         setBrainQuote({ team: t, text });
@@ -146,7 +152,9 @@ export default function App() {
         <>
           <HUD team={team} redIdeas={redIdeas} blueIdeas={blueIdeas}
             redLevel={redLevel} blueLevel={blueLevel}
-            matchTimer={matchTimer} brainQuote={brainQuote} />
+            matchTimer={matchTimer} brainQuote={brainQuote}
+            redCaptureProgress={redCapture} blueCaptureProgress={blueCapture}
+            redBrainCarried={redCarried} blueBrainCarried={blueCarried} />
           {isMobile && (
             <TouchControls onInput={(i) => managerRef.current?.sendTouchInput(i)} />
           )}
