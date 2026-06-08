@@ -2,7 +2,7 @@ name: Deploy Client → GitHub Pages
 
 on:
   push:
-    branches: [main, master, claude/brain-heist-discord-game-jkSt0]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
