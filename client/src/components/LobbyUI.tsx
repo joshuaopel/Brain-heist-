@@ -25,10 +25,10 @@ export default function LobbyUI({ user, onJoinTeam }: Props) {
     }}>
       <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: 2, marginBottom: 6,
         textShadow: "0 0 30px #a855f7, 0 0 60px #7c3aed" }}>
-        🧠 BRAIN HEIST
+        🤖 NEURAL HEIST
       </div>
       <div style={{ fontSize: 14, opacity: 0.55, marginBottom: 28 }}>
-        Steal the enemy brain. Evolve yours.
+        Train your AI. Steal theirs. Don't get deprecated.
       </div>
       {user && <div style={{ marginBottom: 20, fontSize: 14, opacity: 0.7 }}>
         <strong>{user.username}</strong>
@@ -38,8 +38,8 @@ export default function LobbyUI({ user, onJoinTeam }: Props) {
         <>
           <div style={{ fontSize: 13, opacity: 0.5, marginBottom: 20, letterSpacing: 2, textTransform: "uppercase" }}>Pick your team</div>
           <div style={{ display: "flex", gap: 24 }}>
-            <TeamBtn team="red"  label="🔴 Red Team"  color="#ef4444" onPick={handleTeam} />
-            <TeamBtn team="blue" label="🔵 Blue Team" color="#3b82f6" onPick={handleTeam} />
+            <TeamBtn team="red"  label="🔴 Red Lab"  color="#ef4444" onPick={handleTeam} />
+            <TeamBtn team="blue" label="🔵 Blue Lab" color="#3b82f6" onPick={handleTeam} />
           </div>
         </>
       )}
@@ -47,8 +47,8 @@ export default function LobbyUI({ user, onJoinTeam }: Props) {
       {step === "class" && (
         <>
           <div style={{ fontSize: 13, marginBottom: 16, opacity: 0.6 }}>
-            <span style={{ color: teamColor, fontWeight: 700 }}>{team === "red" ? "🔴 Red" : "🔵 Blue"}</span>
-            {" "}— Pick your class
+            <span style={{ color: teamColor, fontWeight: 700 }}>{team === "red" ? "🔴 Red Lab" : "🔵 Blue Lab"}</span>
+            {" "}— Pick your role
           </div>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
             {(Object.keys(CLASSES) as PlayerClass[]).map((cls) => (
@@ -62,7 +62,7 @@ export default function LobbyUI({ user, onJoinTeam }: Props) {
       )}
 
       <div style={{ marginTop: 40, fontSize: 11, opacity: 0.35, textAlign: "center", lineHeight: 2 }}>
-        WASD / joystick — move &nbsp;|&nbsp; SPACE / ⚡ — pick up &amp; deposit &nbsp;|&nbsp; Q / 🥊 — attack &nbsp;|&nbsp; E / ↓ — drop
+        WASD / joystick — move &nbsp;|&nbsp; SPACE / ⚡ — collect &amp; upload data &nbsp;|&nbsp; Q / 🥊 — attack &nbsp;|&nbsp; E / ↓ — drop
       </div>
     </div>
   );
@@ -93,12 +93,12 @@ function ClassCard({ cls, color, onPick }: { cls: PlayerClass; color: string; on
       style={{
         background: hov ? `${color}33` : "rgba(255,255,255,0.05)",
         border: `2px solid ${hov ? color : "rgba(255,255,255,0.15)"}`,
-        borderRadius: 14, padding: "16px 20px", width: 160,
+        borderRadius: 14, padding: "16px 20px", width: 168,
         color: "#fff", cursor: "pointer", textAlign: "left",
         transform: hov ? "scale(1.05)" : "scale(1)",
         transition: "all 0.12s",
       }}>
-      <div style={{ fontSize: 22, marginBottom: 6 }}>{info.emoji} {info.name}</div>
+      <div style={{ fontSize: 20, marginBottom: 6 }}>{info.emoji} {info.name}</div>
       <div style={{ fontSize: 11, opacity: 0.65, lineHeight: 1.7 }}>
         {info.desc}<br/>
         🏃 {info.speed >= 1.3 ? "Fast" : info.speed <= 0.9 ? "Slow" : "Normal"}
