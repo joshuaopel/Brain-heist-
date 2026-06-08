@@ -77,6 +77,10 @@ export class GameManager {
     });
   }
 
+  sendTouchInput(input: { left: boolean; right: boolean; up: boolean; down: boolean; interact: boolean; drop: boolean }) {
+    if (this.room) this.room.send("input", { ...input, tick: Date.now() });
+  }
+
   joinTeam(team: TeamId) {
     this.currentTeam = team;
     this.callbacks.onTeamChange(team);
