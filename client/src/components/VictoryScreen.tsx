@@ -25,16 +25,19 @@ export default function VictoryScreen({ winner, reason, onRestart }: Props) {
       color: "#fff", userSelect: "none",
     }}>
       <div style={{ fontSize: 18, opacity: 0.7, marginBottom: 12, letterSpacing: 4, textTransform: "uppercase" }}>
-        Victory!
+        AI Achieved Singularity!
       </div>
       <div style={{
         fontSize: 64, fontWeight: 900, color,
         textShadow: `0 0 40px ${color}, 0 0 80px ${color}88`,
-        marginBottom: 16,
+        marginBottom: 8,
       }}>
         {label}
       </div>
-      <div style={{ fontSize: 22, opacity: 0.85, marginBottom: 48, textAlign: "center", maxWidth: 500 }}>
+      <div style={{ fontSize: 16, opacity: 0.5, marginBottom: 24, letterSpacing: 2 }}>
+        WINS THE LAB
+      </div>
+      <div style={{ fontSize: 20, opacity: 0.85, marginBottom: 48, textAlign: "center", maxWidth: 500 }}>
         {reason}
       </div>
       <button

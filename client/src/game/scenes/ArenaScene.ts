@@ -109,7 +109,7 @@ export class ArenaScene extends Phaser.Scene {
     g.fillCircle(MAP.redNest.x, MAP.redNest.y, MAP.nestRadius);
     g.lineStyle(3, COLORS.red, 0.8);
     g.strokeCircle(MAP.redNest.x, MAP.redNest.y, MAP.nestRadius);
-    this.add.text(MAP.redNest.x, MAP.redNest.y - MAP.nestRadius - 10, "🧠 NEST", {
+    this.add.text(MAP.redNest.x, MAP.redNest.y - MAP.nestRadius - 10, "🖥 LAB", {
       fontSize: "12px", fontStyle: "bold", color: "#ef4444",
     }).setOrigin(0.5).setAlpha(0.9);
 
@@ -125,7 +125,7 @@ export class ArenaScene extends Phaser.Scene {
       );
     }
     g.strokeCircle(MAP.redPrison.x, MAP.redPrison.y, MAP.prisonRadius);
-    this.add.text(MAP.redPrison.x, MAP.redPrison.y - MAP.prisonRadius - 10, "⛓ PRISON", {
+    this.add.text(MAP.redPrison.x, MAP.redPrison.y - MAP.prisonRadius - 10, "🔒 SANDBOX", {
       fontSize: "12px", fontStyle: "bold", color: "#ef4444",
     }).setOrigin(0.5).setAlpha(0.9);
 
@@ -138,7 +138,7 @@ export class ArenaScene extends Phaser.Scene {
     g.fillCircle(MAP.blueNest.x, MAP.blueNest.y, MAP.nestRadius);
     g.lineStyle(3, COLORS.blue, 0.8);
     g.strokeCircle(MAP.blueNest.x, MAP.blueNest.y, MAP.nestRadius);
-    this.add.text(MAP.blueNest.x, MAP.blueNest.y - MAP.nestRadius - 10, "🧠 NEST", {
+    this.add.text(MAP.blueNest.x, MAP.blueNest.y - MAP.nestRadius - 10, "🖥 LAB", {
       fontSize: "12px", fontStyle: "bold", color: "#3b82f6",
     }).setOrigin(0.5).setAlpha(0.9);
 
@@ -154,7 +154,7 @@ export class ArenaScene extends Phaser.Scene {
       );
     }
     g.strokeCircle(MAP.bluePrison.x, MAP.bluePrison.y, MAP.prisonRadius);
-    this.add.text(MAP.bluePrison.x, MAP.bluePrison.y - MAP.prisonRadius - 10, "⛓ PRISON", {
+    this.add.text(MAP.bluePrison.x, MAP.bluePrison.y - MAP.prisonRadius - 10, "🔒 SANDBOX", {
       fontSize: "12px", fontStyle: "bold", color: "#3b82f6",
     }).setOrigin(0.5).setAlpha(0.9);
 
@@ -343,7 +343,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private spawnLevelUpEffect(x: number, y: number, team: TeamId) {
     const color = team === "red" ? "#ef4444" : "#3b82f6";
-    const text = this.add.text(x, y - 50, "LEVEL UP! 🧠", {
+    const text = this.add.text(x, y - 50, "UPGRADED! 🤖", {
       fontSize: "24px", fontStyle: "bold", color,
       stroke: "#000", strokeThickness: 4,
     }).setOrigin(0.5);

@@ -55,7 +55,7 @@ export default function App() {
     });
     managerRef.current = manager;
 
-    const msgs = ["Waking up server…", "Brewing coffee ☕…", "Loading brains 🧠…", "Almost there…"];
+    const msgs = ["Waking up server…", "Compiling prompts ✍️…", "Loading models 🤖…", "Almost there…"];
     let i = 0;
     const ticker = setInterval(() => { i = Math.min(i + 1, msgs.length - 1); setConnectMsg(msgs[i]); }, 5000);
 
@@ -89,8 +89,8 @@ export default function App() {
           flexDirection: "column", alignItems: "center", justifyContent: "center",
           background: "rgba(10,4,30,0.96)", color: "#fff",
         }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🧠</div>
-          <div style={{ fontSize: 28, fontWeight: 900, marginBottom: 12, textShadow: "0 0 20px #a855f7" }}>BRAIN HEIST</div>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🤖</div>
+          <div style={{ fontSize: 28, fontWeight: 900, marginBottom: 12, textShadow: "0 0 20px #a855f7" }}>NEURAL HEIST</div>
           <div style={{ fontSize: 16, opacity: 0.7, marginBottom: 32 }}>{connectMsg}</div>
           {connectState === "connecting" && (
             <div style={{ display: "flex", gap: 8 }}>
