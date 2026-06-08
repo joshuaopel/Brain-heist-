@@ -64,6 +64,11 @@ export class ArenaScene extends Phaser.Scene {
 
   private tickCounter = 0;
   private lastBrainLevels = { red: 1, blue: 1 };
+  private touch = { left: false, right: false, up: false, down: false, interact: false, drop: false };
+
+  setTouchInput(input: { left: boolean; right: boolean; up: boolean; down: boolean; interact: boolean; drop: boolean }) {
+    this.touch = { ...input };
+  }
 
   constructor() {
     super({ key: "ArenaScene" });
@@ -436,14 +441,18 @@ export class ArenaScene extends Phaser.Scene {
 
     const k = this.keys;
     const input = {
-      left: k.A.isDown || k.LEFT.isDown,
-      right: k.D.isDown || k.RIGHT.isDown,
-      up: k.W.isDown || k.UP.isDown,
-      down: k.S.isDown || k.DOWN.isDown,
-      interact: Phaser.Input.Keyboard.JustDown(k.SPACE),
-      drop: Phaser.Input.Keyboard.JustDown(k.E),
-      tick: ++this.tickCounter,
+      left:     k.A.isDown || k.LEFT.isDown  || this.touch.left,
+      right:    k.D.isDown || k.RIGHT.isDown || this.touch.right,
+      up:       k.W.isDown || k.UP.isDown    || this.touch.up,
+      down:     k.S.isDown || k.DOWN.isDown  || this.touch.down,
+      interact: Phaser.Input.Keyboard.JustDown(k.SPACE) || this.touch.interact,
+      drop:     Phaser.Input.Keyboard.JustDown(k.E)     || this.touch.drop,
+      tick:     ++this.tickCounter,
     };
+
+    // Clear one-shot touch buttons after consuming them
+    this.touch.interact = false;
+    this.touch.drop = false;
 
     this.room.send("input", input);
   }

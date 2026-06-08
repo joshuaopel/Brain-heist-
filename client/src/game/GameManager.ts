@@ -65,6 +65,9 @@ export class GameManager {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
       },
+      input: {
+        touch: false, // React handles touch; Phaser handles keyboard only
+      },
       physics: { default: "none" },
       scene: [ArenaScene],
     });
@@ -78,7 +81,8 @@ export class GameManager {
   }
 
   sendTouchInput(input: { left: boolean; right: boolean; up: boolean; down: boolean; interact: boolean; drop: boolean }) {
-    if (this.room) this.room.send("input", { ...input, tick: Date.now() });
+    const scene = this.game?.scene.getScene("ArenaScene") as import("./scenes/ArenaScene").ArenaScene | null;
+    scene?.setTouchInput(input);
   }
 
   joinTeam(team: TeamId) {
