@@ -2,7 +2,7 @@ services:
   - type: web
     name: brain-heist-server
     runtime: node
-    buildCommand: npm install && npm run build --workspace=shared && VITE_BASE_PATH=/ VITE_SERVER_URL= npm run build --workspace=client && npm run build --workspace=server
+    buildCommand: npm install && npm run build --workspace=shared && npm run build --workspace=client && npm run build --workspace=server
     startCommand: node server/dist/index.js
     envVars:
       - key: NODE_ENV

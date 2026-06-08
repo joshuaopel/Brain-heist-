@@ -31,6 +31,7 @@ jobs:
         env:
           VITE_DISCORD_CLIENT_ID: ${{ vars.VITE_DISCORD_CLIENT_ID }}
           VITE_BASE_PATH: /Brain-heist-/
+          VITE_SERVER_URL: wss://brain-heist.onrender.com
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
