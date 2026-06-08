@@ -57,10 +57,11 @@ app.post("/api/token", async (req, res) => {
 });
 
 // Serve the built client (Discord Activity loads from here at root /)
-const clientDist = path.join(__dirname, "..", "..", "client", "dist");
+const clientDist = path.join(process.cwd(), "client", "dist");
 app.use(express.static(clientDist));
 app.get("*", (_req, res) => res.sendFile(path.join(clientDist, "index.html")));
 
 httpServer.listen(port, () => {
   console.log(`Brain Heist server running on http://localhost:${port}`);
+  console.log(`Serving client from: ${clientDist}`);
 });
