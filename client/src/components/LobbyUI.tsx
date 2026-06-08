@@ -1,43 +1,92 @@
-import React from "react";
+import React, { useState } from "react";
 import type { TeamId } from "@brain-heist/shared";
 import type { UserInfo } from "../App";
 
 interface Props {
   user: UserInfo | null;
   onJoinTeam: (team: TeamId) => void;
+  onStartGame: () => void;
 }
 
-export default function LobbyUI({ user, onJoinTeam }: Props) {
+export default function LobbyUI({ user, onJoinTeam, onStartGame }: Props) {
+  const [joined, setJoined] = useState<TeamId | null>(null);
+
+  const handleJoin = (team: TeamId) => {
+    setJoined(team);
+    onJoinTeam(team);
+  };
+
+  const teamColor = joined === "red" ? "#ef4444" : joined === "blue" ? "#3b82f6" : "#a855f7";
+
   return (
     <div style={{
       position: "absolute", inset: 0, display: "flex",
       flexDirection: "column", alignItems: "center", justifyContent: "center",
-      background: "rgba(10,4,30,0.88)", color: "#fff", userSelect: "none",
+      background: "rgba(10,4,30,0.92)", color: "#fff", userSelect: "none",
     }}>
-      <div style={{ fontSize: 56, fontWeight: 900, letterSpacing: 2, marginBottom: 8,
+      <div style={{ fontSize: 48, fontWeight: 900, letterSpacing: 2, marginBottom: 6,
         textShadow: "0 0 30px #a855f7, 0 0 60px #7c3aed" }}>
         🧠 BRAIN HEIST
       </div>
-      <div style={{ fontSize: 18, opacity: 0.7, marginBottom: 48 }}>
+      <div style={{ fontSize: 16, opacity: 0.6, marginBottom: 36 }}>
         Steal the enemy brain. Evolve yours. Don't get pushed around.
       </div>
 
       {user && (
-        <div style={{ marginBottom: 32, fontSize: 16, opacity: 0.8 }}>
+        <div style={{ marginBottom: 28, fontSize: 15, opacity: 0.8 }}>
           Playing as <strong>{user.username}</strong>
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 32 }}>
-        <TeamButton team="red" label="🔴 RED TEAM" color="#ef4444" hoverColor="#dc2626" onJoin={onJoinTeam} />
-        <TeamButton team="blue" label="🔵 BLUE TEAM" color="#3b82f6" hoverColor="#2563eb" onJoin={onJoinTeam} />
-      </div>
+      {!joined ? (
+        <>
+          <div style={{ display: "flex", gap: 24 }}>
+            <TeamButton team="red" label="🔴 RED TEAM" color="#ef4444" hoverColor="#dc2626" onJoin={handleJoin} />
+            <TeamButton team="blue" label="🔵 BLUE TEAM" color="#3b82f6" hoverColor="#2563eb" onJoin={handleJoin} />
+          </div>
+          <div style={{ marginTop: 48, fontSize: 12, opacity: 0.4, textAlign: "center", lineHeight: 1.9 }}>
+            WASD / joystick to move &nbsp;|&nbsp; SPACE / ⚡ to pick up &nbsp;|&nbsp; E / ↓ to drop<br/>
+            Deliver Creative Artifacts to your Brain to evolve it<br/>
+            Reach Level 5 or capture the enemy Brain to win!
+          </div>
+        </>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
+          <div style={{
+            fontSize: 20, fontWeight: 800, color: teamColor,
+            padding: "12px 28px", borderRadius: 12,
+            background: `${teamColor}22`, border: `2px solid ${teamColor}66`,
+          }}>
+            {joined === "red" ? "🔴 Red Team" : "🔵 Blue Team"} — Ready!
+          </div>
 
-      <div style={{ marginTop: 64, fontSize: 13, opacity: 0.5, textAlign: "center", lineHeight: 1.8 }}>
-        WASD to move &nbsp;|&nbsp; SPACE to interact / pick up &nbsp;|&nbsp; E to drop<br/>
-        Deliver Creative Artifacts to your Brain to evolve it<br/>
-        Reach Level 5 or capture the enemy Brain to win!
-      </div>
+          <button
+            onClick={onStartGame}
+            style={{
+              background: "#7c3aed", border: "none", borderRadius: 14,
+              padding: "16px 48px", fontSize: 20, fontWeight: 900,
+              color: "#fff", cursor: "pointer",
+              boxShadow: "0 0 24px #7c3aed88",
+              letterSpacing: 1,
+            }}
+          >
+            ▶ Start Game
+          </button>
+
+          <div style={{ fontSize: 13, opacity: 0.45 }}>
+            Or wait for more players to join
+          </div>
+
+          <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
+            <span
+              onClick={() => setJoined(null)}
+              style={{ fontSize: 13, opacity: 0.5, cursor: "pointer", textDecoration: "underline" }}
+            >
+              Change team
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -53,11 +102,10 @@ function TeamButton({ team, label, color, hoverColor, onJoin }: {
       onMouseLeave={() => setHov(false)}
       style={{
         background: hov ? hoverColor : color,
-        border: "none", borderRadius: 16, padding: "20px 48px",
-        fontSize: 22, fontWeight: 800, color: "#fff", cursor: "pointer",
+        border: "none", borderRadius: 16, padding: "18px 40px",
+        fontSize: 20, fontWeight: 800, color: "#fff", cursor: "pointer",
         transform: hov ? "scale(1.07)" : "scale(1)",
         transition: "all 0.15s", boxShadow: `0 0 24px ${color}88`,
-        letterSpacing: 1,
       }}
     >
       {label}

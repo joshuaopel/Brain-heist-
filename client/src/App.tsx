@@ -126,7 +126,7 @@ export default function App() {
       )}
 
       {connectState === "ready" && phase === "lobby" && (
-        <LobbyUI user={user} onJoinTeam={handleJoinTeam} />
+        <LobbyUI user={user} onJoinTeam={handleJoinTeam} onStartGame={handleRestart} />
       )}
 
       {phase === "playing" && (

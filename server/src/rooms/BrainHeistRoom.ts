@@ -59,9 +59,10 @@ export class BrainHeistRoom extends Room<GameState> {
       if (this.state.phase === "lobby" && this.state.players.size >= 2) {
         this.startGame();
       }
+      // Allow single player to start via explicit message
     });
 
-    this.onMessage("start_game", () => {
+    this.onMessage("start_game", (_client) => {
       if (this.state.phase === "lobby") this.startGame();
     });
 
