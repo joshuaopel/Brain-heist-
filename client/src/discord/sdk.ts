@@ -17,9 +17,10 @@ export async function initDiscord(): Promise<{
   avatarUrl: string;
 }> {
   const clientId = import.meta.env.VITE_DISCORD_CLIENT_ID;
+  const isInsideDiscord = new URLSearchParams(window.location.search).has("frame_id");
 
-  // In dev without Discord context, return mock data
-  if (!clientId || window.location.hostname === "localhost") {
+  // Return mock user when not inside Discord's Activity iframe
+  if (!clientId || !isInsideDiscord) {
     const mockId = `dev_${Math.random().toString(36).slice(2, 8)}`;
     return {
       userId: mockId,
