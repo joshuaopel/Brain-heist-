@@ -93,7 +93,7 @@ export class GameManager {
     scene?.setTouchInput(input);
   }
 
-  joinTeam(team: TeamId, playerClass: PlayerClass = "coder") {
+  joinTeam(team: TeamId, playerClass: PlayerClass = "user") {
     this.currentTeam = team;
     this.callbacks.onTeamChange(team);
     this.room.send("join_team", {

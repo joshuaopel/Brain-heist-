@@ -392,7 +392,7 @@ export class ArenaScene extends Phaser.Scene {
     }
   }
 
-  private createPlayerSprite(x: number, y: number, team: TeamId, name: string, playerClass: PlayerClass = "coder"): Phaser.GameObjects.Container {
+  private createPlayerSprite(x: number, y: number, team: TeamId, name: string, playerClass: PlayerClass = "user"): Phaser.GameObjects.Container {
     const container = this.add.container(x, y);
     this.updatePlayerSprite(container, team, name, 0, false, playerClass, false);
     return container;
@@ -404,7 +404,7 @@ export class ArenaScene extends Phaser.Scene {
     name: string,
     carrying: number,
     isSelf: boolean,
-    playerClass: PlayerClass = "coder",
+    playerClass: PlayerClass = "user",
     stunned: boolean = false,
   ) {
     container.removeAll(true);
@@ -435,9 +435,12 @@ export class ArenaScene extends Phaser.Scene {
 
     // Body — tinted by class
     const classColors: Record<PlayerClass, number> = {
-      coder: color,
-      designer: team === "red" ? 0xf87171 : 0x818cf8,
-      brawler:  team === "red" ? 0xb45309 : 0x1d4ed8,
+      user:      color,
+      sysadmin:  team === "red" ? 0xfb923c : 0x34d399,
+      redteamer: team === "red" ? 0xdc2626 : 0x1d4ed8,
+      whitehat:  team === "red" ? 0xfbbf24 : 0x93c5fd,
+      algorithm: team === "red" ? 0xa855f7 : 0x7c3aed,
+      support:   team === "red" ? 0xf472b6 : 0x4ade80,
     };
     const body = this.add.graphics();
     body.fillStyle(stunned ? 0xaaaaaa : classColors[playerClass], 1);

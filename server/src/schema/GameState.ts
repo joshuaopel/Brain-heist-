@@ -6,7 +6,7 @@ export class PlayerState extends Schema {
   @type("string")  name: string = "Player";
   @type("string")  avatarUrl: string = "";
   @type("string")  team: TeamId = "red";
-  @type("string")  playerClass: PlayerClass = "coder";
+  @type("string")  playerClass: PlayerClass = "user";
   @type("float32") x: number = 400;
   @type("float32") y: number = 300;
   @type("int8")    carrying: number = 0;

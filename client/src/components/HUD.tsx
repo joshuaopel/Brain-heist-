@@ -32,7 +32,7 @@ function BrainBar({ ideas, level, color, label }: { ideas: number; level: number
     <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 220 }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 700 }}>
         <span style={{ color }}>{label} — Lv.{level} {current.name}</span>
-        <span style={{ opacity: 0.7 }}>{ideas} tokens</span>
+        <span style={{ opacity: 0.7 }}>{ideas} load</span>
       </div>
       <div style={{ height: 12, background: "rgba(255,255,255,0.1)", borderRadius: 6, overflow: "hidden" }}>
         <div style={{
@@ -56,7 +56,7 @@ export default function HUD({ team, redIdeas, blueIdeas, redLevel, blueLevel, ma
         padding: "10px 20px", pointerEvents: "none",
         background: "linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)",
       }}>
-        <BrainBar ideas={redIdeas} level={redLevel} color="#ef4444" label="🔴 Red AI" />
+        <BrainBar ideas={redIdeas} level={redLevel} color="#ef4444" label="🔴 Red Machine" />
 
         <div style={{
           fontSize: 32, fontWeight: 900, color: matchTimer < 30000 ? "#ef4444" : "#fff",
@@ -66,7 +66,7 @@ export default function HUD({ team, redIdeas, blueIdeas, redLevel, blueLevel, ma
           {formatTime(matchTimer)}
         </div>
 
-        <BrainBar ideas={blueIdeas} level={blueLevel} color="#3b82f6" label="🔵 Blue AI" />
+        <BrainBar ideas={blueIdeas} level={blueLevel} color="#3b82f6" label="🔵 Blue Machine" />
       </div>
 
       {/* Brain alert */}

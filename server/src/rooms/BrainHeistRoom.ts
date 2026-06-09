@@ -1,8 +1,8 @@
 import { Room, Client } from "colyseus";
 import { GameState, PlayerState, ArtifactState, BrainState } from "../schema/GameState";
 import {
-  InputPayload, TeamId, ArtifactType, ARTIFACT_TYPES, ARTIFACT_VALUES,
-  MAP, GAME_WIDTH, GAME_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT, PLAYER_SPEED, PLAYER_RADIUS, BRAIN_LEVELS,
+  InputPayload, TeamId, ArtifactType, ARTIFACT_VALUES,
+  MAP, WORLD_WIDTH, WORLD_HEIGHT, PLAYER_SPEED, PLAYER_RADIUS, BRAIN_LEVELS,
   BRAIN_CAPTURE_TIME, ORB_SPAWN_INTERVAL, INTERACT_RANGE,
   CLASSES, PlayerClass, ATTACK_KNOCKBACK_BASE, CARRY_SLOW_PER_ITEM,
 } from "@brain-heist/shared";
@@ -39,7 +39,7 @@ export class BrainHeistRoom extends Room<GameState> {
       const p = this.state.players.get(client.sessionId);
       if (!p) return;
       p.team = data.team;
-      p.playerClass = data.playerClass ?? "coder";
+      p.playerClass = data.playerClass ?? "user";
       p.name = data.name || "Player";
       p.avatarUrl = data.avatarUrl || "";
       this.respawnPlayer(p);
@@ -87,7 +87,6 @@ export class BrainHeistRoom extends Room<GameState> {
     this.state.winner = "";
     this.state.winReason = "";
     this.resetBrains();
-    // Respawn all players
     this.state.players.forEach((p) => this.respawnPlayer(p));
   }
 
@@ -111,11 +110,15 @@ export class BrainHeistRoom extends Room<GameState> {
     this.state.artifacts.set(a.id, a);
   }
 
-  private dropArtifactsForPlayer(sessionId: string) {
+  private dropArtifactsForPlayer(sessionId: string, scatterX?: number, scatterY?: number) {
     const p = this.state.players.get(sessionId);
     this.state.artifacts.forEach((a) => {
-      if (a.heldBy === sessionId) {
-        a.held = false; a.heldBy = "";
+      if (a.heldBy !== sessionId) return;
+      a.held = false;
+      a.heldBy = "";
+      if (scatterX !== undefined && scatterY !== undefined) {
+        a.x = clamp(scatterX + (Math.random() - 0.5) * 60, 80, WORLD_WIDTH - 80);
+        a.y = clamp(scatterY + (Math.random() - 0.5) * 60, 80, WORLD_HEIGHT - 80);
       }
     });
     if (p) p.carrying = 0;
@@ -123,6 +126,11 @@ export class BrainHeistRoom extends Room<GameState> {
 
   private getBrainRadius(brain: BrainState) {
     return 30 + (brain.level - 1) * 10;
+  }
+
+  // Heavier machine = slower carry speed; scales with data loaded into it
+  private getMachineCarrySlow(brain: BrainState): number {
+    return Math.max(0.15, 0.5 - brain.ideas * 0.004);
   }
 
   private update(dt: number) {
@@ -133,7 +141,6 @@ export class BrainHeistRoom extends Room<GameState> {
     if (this.orbTimer >= ORB_SPAWN_INTERVAL) { this.orbTimer = 0; this.spawnArtifact(); }
 
     this.state.players.forEach((player, sessionId) => {
-      // Tick down stun and attack cooldown
       if (player.stunTimer > 0) {
         player.stunTimer = Math.max(0, player.stunTimer - dt);
         player.stunned = player.stunTimer > 0;
@@ -147,10 +154,14 @@ export class BrainHeistRoom extends Room<GameState> {
       const input = this.inputs.get(sessionId);
       if (!input) return;
 
-      const cls = CLASSES[player.playerClass] ?? CLASSES.coder;
+      const cls = CLASSES[player.playerClass] ?? CLASSES.user;
       const carrySlowMult = 1 - player.carrying * CARRY_SLOW_PER_ITEM;
-      const carryingBrain = this.state.redBrain.carriedBy === sessionId || this.state.blueBrain.carriedBy === sessionId;
-      const brainSlow = carryingBrain ? 0.5 : 1;
+      const carryingBrainNow = this.state.redBrain.carriedBy === sessionId || this.state.blueBrain.carriedBy === sessionId;
+      let brainSlow = 1;
+      if (carryingBrainNow) {
+        const carriedBrain = this.state.redBrain.carriedBy === sessionId ? this.state.redBrain : this.state.blueBrain;
+        brainSlow = this.getMachineCarrySlow(carriedBrain);
+      }
       const speedMult = cls.speed * carrySlowMult * brainSlow;
 
       const dx = (input.right ? 1 : 0) - (input.left ? 1 : 0);
@@ -164,14 +175,14 @@ export class BrainHeistRoom extends Room<GameState> {
       player.y = clamp(player.y, PLAYER_RADIUS, WORLD_HEIGHT - PLAYER_RADIUS);
       player.tick = input.tick;
 
-      // Move carried brain
-      if (carryingBrain) {
+      if (carryingBrainNow) {
         const eBrain = this.state.redBrain.carriedBy === sessionId ? this.state.redBrain : this.state.blueBrain;
         eBrain.x = player.x;
         eBrain.y = player.y;
       }
 
       if (input.interact) this.handleInteract(player, sessionId);
+      if (input.drop)     this.handleDrop(player, sessionId);
       if (input.attack && player.attackCooldown <= 0) this.handleAttack(player, sessionId);
     });
 
@@ -200,26 +211,23 @@ export class BrainHeistRoom extends Room<GameState> {
   }
 
   private handleInteract(player: PlayerState, sessionId: string) {
-    const ownBrain  = player.team === "red" ? this.state.redBrain  : this.state.blueBrain;
     const enemyBrain = player.team === "red" ? this.state.blueBrain : this.state.redBrain;
-    const nestPos   = player.team === "red" ? MAP.redNest  : MAP.blueNest;
+    const cls = CLASSES[player.playerClass] ?? CLASSES.user;
 
-    // Deposit artifacts at own nest
-    if (dist(player.x, player.y, nestPos.x, nestPos.y) < INTERACT_RANGE + MAP.nestRadius) {
-      if (player.carrying > 0) {
-        this.state.artifacts.forEach((a) => {
-          if (a.heldBy !== sessionId) return;
-          ownBrain.ideas += ARTIFACT_VALUES[a.type];
-          this.state.artifacts.delete(a.id);
-        });
-        player.carrying = 0;
-        this.updateBrainLevel(ownBrain);
-        return;
-      }
+    // Priority 1: Feed artifacts into enemy machine (makes it heavier to carry)
+    if (player.carrying > 0 && !enemyBrain.beingCarried &&
+        dist(player.x, player.y, enemyBrain.x, enemyBrain.y) < INTERACT_RANGE + this.getBrainRadius(enemyBrain)) {
+      this.state.artifacts.forEach((a) => {
+        if (a.heldBy !== sessionId) return;
+        enemyBrain.ideas += ARTIFACT_VALUES[a.type];
+        this.state.artifacts.delete(a.id);
+      });
+      player.carrying = 0;
+      this.updateBrainLevel(enemyBrain);
+      return;
     }
 
-    // Pick up artifact
-    const cls = CLASSES[player.playerClass] ?? CLASSES.coder;
+    // Priority 2: Pick up a nearby artifact
     if (player.carrying < cls.carry) {
       let picked = false;
       this.state.artifacts.forEach((a) => {
@@ -234,70 +242,101 @@ export class BrainHeistRoom extends Room<GameState> {
       if (picked) return;
     }
 
-    // Grab enemy brain
+    // Priority 3: Grab enemy machine and carry it
     if (!enemyBrain.beingCarried &&
         dist(player.x, player.y, enemyBrain.x, enemyBrain.y) < INTERACT_RANGE + this.getBrainRadius(enemyBrain)) {
       enemyBrain.beingCarried = true;
       enemyBrain.carriedBy = sessionId;
-      return;
     }
+  }
 
-    // Drop enemy brain
+  private handleDrop(player: PlayerState, sessionId: string) {
+    const enemyBrain = player.team === "red" ? this.state.blueBrain : this.state.redBrain;
+
+    // Drop carried machine first
     if (enemyBrain.carriedBy === sessionId) {
       enemyBrain.beingCarried = false;
       enemyBrain.carriedBy = "";
+      return;
+    }
+
+    // Drop held artifacts scattered around player
+    if (player.carrying > 0) {
+      this.dropArtifactsForPlayer(sessionId, player.x, player.y);
     }
   }
 
   private handleAttack(attacker: PlayerState, attackerId: string) {
-    const cls = CLASSES[attacker.playerClass] ?? CLASSES.coder;
+    const cls = CLASSES[attacker.playerClass] ?? CLASSES.user;
     attacker.attackCooldown = cls.attackCooldown;
 
+    // Eng Support: heals stunned allies instead of attacking enemies
+    if (attacker.playerClass === "support") {
+      this.state.players.forEach((target, targetId) => {
+        if (targetId === attackerId || target.team !== attacker.team) return;
+        if (!target.stunned) return;
+        const d = dist(attacker.x, attacker.y, target.x, target.y);
+        if (d > cls.attackRange + PLAYER_RADIUS * 2) return;
+        target.stunned = false;
+        target.stunTimer = 0;
+      });
+      return;
+    }
+
+    // Algorithm: AOE blast hits all enemies in range simultaneously
+    if (attacker.playerClass === "algorithm") {
+      this.state.players.forEach((target, targetId) => {
+        if (targetId === attackerId || target.team === attacker.team) return;
+        const d = dist(attacker.x, attacker.y, target.x, target.y);
+        if (d > cls.attackRange + PLAYER_RADIUS * 2) return;
+        this.applyHit(attacker, attacker.playerClass as PlayerClass, attackerId, target, targetId, d);
+      });
+      return;
+    }
+
+    // All other classes: single-target hit (closest enemy in range)
+    let closest: PlayerState | null = null;
+    let closestId = "";
+    let closestDist = Infinity;
     this.state.players.forEach((target, targetId) => {
       if (targetId === attackerId || target.team === attacker.team) return;
       const d = dist(attacker.x, attacker.y, target.x, target.y);
-      if (d > cls.attackRange + PLAYER_RADIUS * 2) return;
-
-      // Knockback
-      const nx = d > 0 ? (target.x - attacker.x) / d : 1;
-      const ny = d > 0 ? (target.y - attacker.y) / d : 0;
-      const force = ATTACK_KNOCKBACK_BASE * cls.attackKnockback;
-      target.x = clamp(target.x + nx * force * 0.1, PLAYER_RADIUS, WORLD_WIDTH - PLAYER_RADIUS);
-      target.y = clamp(target.y + ny * force * 0.1, PLAYER_RADIUS, WORLD_HEIGHT - PLAYER_RADIUS);
-
-      // Stun (brawler)
-      if (cls.attackStun > 0) {
-        target.stunned = true;
-        target.stunTimer = cls.attackStun;
-      }
-
-      // Coder mugs 1 artifact on hit
-      if (attacker.playerClass === "coder" && target.carrying > 0) {
-        let mugged = false;
-        this.state.artifacts.forEach((a) => {
-          if (mugged || a.heldBy !== targetId) return;
-          const attackerCls = CLASSES[attacker.playerClass];
-          if (attacker.carrying < attackerCls.carry) {
-            a.heldBy = attackerId;
-            attacker.carrying++;
-            target.carrying--;
-            mugged = true;
-          }
-        });
-      }
-
-      // Drop brain if carrying it while stunned
-      if (target.stunned) {
-        if (this.state.redBrain.carriedBy === targetId) {
-          this.state.redBrain.beingCarried = false;
-          this.state.redBrain.carriedBy = "";
-        }
-        if (this.state.blueBrain.carriedBy === targetId) {
-          this.state.blueBrain.beingCarried = false;
-          this.state.blueBrain.carriedBy = "";
-        }
-      }
+      if (d > cls.attackRange + PLAYER_RADIUS * 2 || d >= closestDist) return;
+      closestDist = d; closest = target; closestId = targetId;
     });
+    if (closest) this.applyHit(attacker, attacker.playerClass as PlayerClass, attackerId, closest, closestId, closestDist);
+  }
+
+  private applyHit(attacker: PlayerState, playerClass: PlayerClass, attackerId: string, target: PlayerState, targetId: string, d: number) {
+    const cls = CLASSES[playerClass];
+    const nx = d > 0 ? (target.x - attacker.x) / d : 1;
+    const ny = d > 0 ? (target.y - attacker.y) / d : 0;
+    const force = ATTACK_KNOCKBACK_BASE * cls.attackKnockback;
+    target.x = clamp(target.x + nx * force * 0.1, PLAYER_RADIUS, WORLD_WIDTH - PLAYER_RADIUS);
+    target.y = clamp(target.y + ny * force * 0.1, PLAYER_RADIUS, WORLD_HEIGHT - PLAYER_RADIUS);
+
+    if (cls.attackStun > 0) {
+      target.stunned = true;
+      target.stunTimer = cls.attackStun;
+    }
+
+    // Script Kiddie (user) mugs 1 artifact on hit
+    if (playerClass === "user" && target.carrying > 0 && attacker.carrying < cls.carry) {
+      let mugged = false;
+      this.state.artifacts.forEach((a) => {
+        if (mugged || a.heldBy !== targetId) return;
+        a.heldBy = attackerId;
+        attacker.carrying++;
+        target.carrying--;
+        mugged = true;
+      });
+    }
+
+    // Drop carried machine when stunned
+    if (target.stunned) {
+      if (this.state.redBrain.carriedBy === targetId) { this.state.redBrain.beingCarried = false; this.state.redBrain.carriedBy = ""; }
+      if (this.state.blueBrain.carriedBy === targetId) { this.state.blueBrain.beingCarried = false; this.state.blueBrain.carriedBy = ""; }
+    }
   }
 
   private updateBrainLevel(brain: BrainState) {
@@ -311,7 +350,6 @@ export class BrainHeistRoom extends Room<GameState> {
 
   private updateCaptureTimer(brain: BrainState, capturingTeam: TeamId, prisonPos: { x: number; y: number }, dt: number) {
     const inPrison = dist(brain.x, brain.y, prisonPos.x, prisonPos.y) < MAP.prisonRadius;
-    // Enemy team players must be nearby to count as "guarding"
     let guardsNearby = false;
     this.state.players.forEach((p) => {
       if (p.team === capturingTeam && dist(p.x, p.y, prisonPos.x, prisonPos.y) < MAP.prisonRadius + 60) {
@@ -330,13 +368,16 @@ export class BrainHeistRoom extends Room<GameState> {
 
   private checkWinConditions() {
     if (this.state.winner) return;
-    if (this.state.redBrain.level >= 5)  { this.endGame("red",  "Red Brain reached Singularity!"); return; }
-    if (this.state.blueBrain.level >= 5) { this.endGame("blue", "Blue Brain reached Singularity!"); return; }
-    if (this.state.redBrain.captured)    { this.endGame("blue", "Blue team captured the Red Brain!"); return; }
-    if (this.state.blueBrain.captured)   { this.endGame("red",  "Red team captured the Blue Brain!"); return; }
+    // Win by locking enemy machine in your sandbox
+    if (this.state.redBrain.captured)  { this.endGame("blue", "Blue team captured the Red Machine!"); return; }
+    if (this.state.blueBrain.captured) { this.endGame("red",  "Red team captured the Blue Machine!"); return; }
     if (this.state.matchTimer <= 0) {
-      const w = this.state.redBrain.ideas >= this.state.blueBrain.ideas ? "red" : "blue";
-      this.endGame(w, "Time's up! Most evolved Brain wins!");
+      // Team that fed more data into the enemy machine wins
+      if (this.state.blueBrain.ideas >= this.state.redBrain.ideas) {
+        this.endGame("red",  "Time's up! Red team overloaded the enemy system!");
+      } else {
+        this.endGame("blue", "Time's up! Blue team overloaded the enemy system!");
+      }
     }
   }
 
