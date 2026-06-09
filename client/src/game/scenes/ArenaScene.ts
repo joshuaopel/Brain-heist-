@@ -62,6 +62,7 @@ export class ArenaScene extends Phaser.Scene {
   private tickCounter = 0;
   private lastBrainLevels = { red: 1, blue: 1 };
   private touch = { left: false, right: false, up: false, down: false, interact: false, drop: false, attack: false };
+  private localFacing = 0;
 
   setTouchInput(input: { left: boolean; right: boolean; up: boolean; down: boolean; interact: boolean; drop: boolean; attack: boolean }) {
     this.touch = { ...input };
@@ -302,12 +303,15 @@ export class ArenaScene extends Phaser.Scene {
         this.cameras.main.startFollow(sprite, true, 0.1, 0.1);
       }
 
+      let prevStunned = false;
       player.onChange(() => {
         const s = this.playerSprites.get(sessionId);
         if (!s) return;
         s.setPosition(player.x, player.y);
         this.updatePlayerSprite(s, player.team, player.name, player.carrying,
           sessionId === this.room.sessionId, player.playerClass as PlayerClass, player.stunned);
+        if (player.stunned && !prevStunned) this.spawnStunEffect(player.x, player.y);
+        prevStunned = player.stunned;
       });
     });
 
@@ -389,6 +393,107 @@ export class ArenaScene extends Phaser.Scene {
         duration: 700, ease: "Cubic.Out",
         onComplete: () => dot.destroy(),
       });
+    }
+  }
+
+  private playAttackVisual(x: number, y: number, playerClass: PlayerClass, _team: TeamId, facing: number) {
+    switch (playerClass) {
+      case "user": {
+        // Script Kiddie: three fast yellow slashes in facing direction
+        for (let i = -1; i <= 1; i++) {
+          const a = facing + i * 0.45;
+          const g = this.add.graphics();
+          g.lineStyle(3, 0xfbbf24, 1);
+          g.lineBetween(x + Math.cos(a) * 18, y + Math.sin(a) * 18, x + Math.cos(a) * 54, y + Math.sin(a) * 54);
+          this.tweens.add({ targets: g, alpha: 0, duration: 180, onComplete: () => g.destroy() });
+        }
+        break;
+      }
+      case "sysadmin": {
+        // SysAdmin: blunt orange impact ring
+        const g = this.add.graphics();
+        g.lineStyle(5, 0xfb923c, 1);
+        g.strokeCircle(x, y, 28);
+        this.tweens.add({ targets: g, alpha: 0, scaleX: 1.9, scaleY: 1.9, duration: 300, ease: "Cubic.Out", onComplete: () => g.destroy() });
+        break;
+      }
+      case "redteamer": {
+        // Red Teamer: heavy red shockwave + inner ring
+        const g = this.add.graphics();
+        g.lineStyle(7, 0xef4444, 1);
+        g.strokeCircle(x, y, 24);
+        const g2 = this.add.graphics();
+        g2.lineStyle(3, 0xfca5a5, 0.6);
+        g2.strokeCircle(x, y, 14);
+        this.tweens.add({ targets: g,  alpha: 0, scaleX: 3.2, scaleY: 3.2, duration: 440, ease: "Cubic.Out", onComplete: () => g.destroy() });
+        this.tweens.add({ targets: g2, alpha: 0, scaleX: 4.2, scaleY: 4.2, duration: 540, ease: "Cubic.Out", onComplete: () => g2.destroy() });
+        break;
+      }
+      case "whitehat": {
+        // White Hat: golden laser beam toward facing direction
+        const ex = x + Math.cos(facing) * 150;
+        const ey = y + Math.sin(facing) * 150;
+        const beam = this.add.graphics();
+        beam.lineStyle(3, 0xfbbf24, 1);
+        beam.lineBetween(x, y, ex, ey);
+        const glow = this.add.graphics();
+        glow.lineStyle(9, 0xfde047, 0.22);
+        glow.lineBetween(x, y, ex, ey);
+        const dot = this.add.graphics();
+        dot.fillStyle(0xfbbf24, 1);
+        dot.fillCircle(ex, ey, 8);
+        this.tweens.add({
+          targets: [beam, glow, dot], alpha: 0, duration: 340,
+          onComplete: () => { beam.destroy(); glow.destroy(); dot.destroy(); },
+        });
+        break;
+      }
+      case "algorithm": {
+        // Algorithm: purple AOE expanding ring + flying sparks
+        const ring = this.add.graphics();
+        ring.lineStyle(4, 0xa855f7, 0.9);
+        ring.strokeCircle(x, y, 22);
+        const fill = this.add.graphics();
+        fill.fillStyle(0xa855f7, 0.14);
+        fill.fillCircle(x, y, 22);
+        this.tweens.add({ targets: ring, alpha: 0, scaleX: 5.5, scaleY: 5.5, duration: 560, ease: "Cubic.Out", onComplete: () => ring.destroy() });
+        this.tweens.add({ targets: fill, alpha: 0, scaleX: 5.5, scaleY: 5.5, duration: 460, ease: "Cubic.Out", onComplete: () => fill.destroy() });
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2;
+          const spark = this.add.graphics();
+          spark.fillStyle(0xd946ef, 1);
+          spark.fillCircle(0, 0, 4);
+          spark.setPosition(x, y);
+          this.tweens.add({ targets: spark, x: x + Math.cos(a) * 100, y: y + Math.sin(a) * 100, alpha: 0, duration: 520, ease: "Cubic.Out", onComplete: () => spark.destroy() });
+        }
+        break;
+      }
+      case "support": {
+        // Eng Support: green healing pulse radiating outward
+        const pulse = this.add.graphics();
+        pulse.lineStyle(3, 0x4ade80, 0.8);
+        pulse.strokeCircle(x, y, 20);
+        this.tweens.add({ targets: pulse, alpha: 0, scaleX: 4.2, scaleY: 4.2, duration: 620, ease: "Sine.Out", onComplete: () => pulse.destroy() });
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2;
+          const dot = this.add.graphics();
+          dot.fillStyle(0x4ade80, 1);
+          dot.fillCircle(0, 0, 5);
+          dot.setPosition(x + Math.cos(a) * 12, y + Math.sin(a) * 12);
+          this.tweens.add({ targets: dot, x: x + Math.cos(a) * 85, y: y + Math.sin(a) * 85, alpha: 0, scaleX: 0.3, scaleY: 0.3, duration: 660, ease: "Sine.Out", onComplete: () => dot.destroy() });
+        }
+        break;
+      }
+    }
+  }
+
+  private spawnStunEffect(x: number, y: number) {
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const star = this.add.text(x + Math.cos(a) * 22, y + Math.sin(a) * 22 - 8, "★", {
+        fontSize: "13px", color: "#facc15",
+      }).setOrigin(0.5);
+      this.tweens.add({ targets: star, x: x + Math.cos(a) * 48, y: y + Math.sin(a) * 48 - 24, alpha: 0, duration: 650, onComplete: () => star.destroy() });
     }
   }
 
@@ -525,14 +630,31 @@ export class ArenaScene extends Phaser.Scene {
     if (!this.keys) return;
 
     const k = this.keys;
+
+    const attackPressed  = Phaser.Input.Keyboard.JustDown(k.SPACE) || this.touch.attack;
+    const interactPressed = Phaser.Input.Keyboard.JustDown(k.E)    || this.touch.interact;
+    const dropPressed    = Phaser.Input.Keyboard.JustDown(k.Q)     || this.touch.drop;
+
+    // Track facing direction for directional attack visuals
+    const fdx = (k.D.isDown || k.RIGHT.isDown || this.touch.right ? 1 : 0) - (k.A.isDown || k.LEFT.isDown || this.touch.left ? 1 : 0);
+    const fdy = (k.S.isDown || k.DOWN.isDown  || this.touch.down  ? 1 : 0) - (k.W.isDown || k.UP.isDown   || this.touch.up   ? 1 : 0);
+    if (fdx !== 0 || fdy !== 0) this.localFacing = Math.atan2(fdy, fdx);
+
+    if (attackPressed) {
+      const lp = this.room.state.players.get(this.room.sessionId);
+      if (lp && lp.attackCooldown <= 0) {
+        this.playAttackVisual(lp.x, lp.y, lp.playerClass as PlayerClass, lp.team as TeamId, this.localFacing);
+      }
+    }
+
     const input = {
       left:     k.A.isDown || k.LEFT.isDown  || this.touch.left,
       right:    k.D.isDown || k.RIGHT.isDown || this.touch.right,
       up:       k.W.isDown || k.UP.isDown    || this.touch.up,
       down:     k.S.isDown || k.DOWN.isDown  || this.touch.down,
-      interact: Phaser.Input.Keyboard.JustDown(k.SPACE) || this.touch.interact,
-      drop:     Phaser.Input.Keyboard.JustDown(k.E)     || this.touch.drop,
-      attack:   Phaser.Input.Keyboard.JustDown(k.Q)     || this.touch.attack,
+      interact: interactPressed,
+      drop:     dropPressed,
+      attack:   attackPressed,
       tick:     ++this.tickCounter,
     };
 

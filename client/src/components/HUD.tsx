@@ -122,7 +122,7 @@ export default function HUD({ team, redIdeas, blueIdeas, redLevel, blueLevel, ma
         color: team === "red" ? "#ef4444" : "#3b82f6",
         textShadow: "0 1px 4px rgba(0,0,0,0.9)",
       }}>
-        {team === "red" ? "🔴 RED TEAM" : "🔵 BLUE TEAM"} &nbsp;|&nbsp; SPACE: interact &nbsp;|&nbsp; E: drop
+        {team === "red" ? "🔴 RED TEAM" : "🔵 BLUE TEAM"} &nbsp;|&nbsp; SPACE: attack &nbsp;|&nbsp; E: interact &nbsp;|&nbsp; Q: drop
       </div>
 
       {/* Brain quote bubble */}
